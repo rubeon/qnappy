@@ -18,36 +18,6 @@ import glob
 
 from time import sleep
 
-EVDEV_DEVICES=["/dev/input/event0"] #,"/dev/input/event1"]
-
-EVDEV_DEVICES=glob.glob("/dev/input/event*")
-"""
-    dev = DeviceGroup(sys.argv[1:])
-    while 1:
-        event = dev.next_event()
-        print event
-        if event is not None:
-            print repr(event)
-            if event.type == "EV_KEY" and event.value == 1:
-                if event.code.startswith("KEY"):
-                    print event.scanCode
-                elif event.code.startswith("BTN"):
-                    print event.code
-                    
-                    
-from get_next_event...
-
-        r, w, x = select.select(self.fds, [], [], 1)
-        for fd in self.fds:
-            if fd in r:
-                buffer = os.read(fd, self.packetSize)
-                event = Event(unpack=buffer)
-                return event
-
-        return None
-                    
-            
-"""
 
 def main():
   """
@@ -55,13 +25,18 @@ def main():
   watches for button events.
   """
   nas = qcontrol.Ts212()
-  ev  = evdev.DeviceGroup(EVDEV_DEVICES)
-  readers = [nas.fd] + ev.fds
-  writers = [nas.fd]
-  writers = []
-  exceptions = []
-  
+  ev =None
+    
   while 1:
+    # watch for incoming event device nodes...
+    del ev
+    EVDEV_DEVICES=glob.glob("/dev/input/event*")
+    ev  = evdev.DeviceGroup(EVDEV_DEVICES)
+    readers = [nas.fd] + ev.fds
+    writers = [nas.fd]
+    writers = []
+    exceptions = []
+
     r, w, x = select.select(readers, writers, exceptions)
     
     for reader in r:
@@ -71,7 +46,8 @@ def main():
     
       elif reader in ev.fds:
         # print "OMG EV!"
-        print ev.next_event()
+        e = ev.next_event()
+        print dir(e)
 
       else:
         pass 

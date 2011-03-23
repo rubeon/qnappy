@@ -1,0 +1,76 @@
+QNAPPY
+======
+
+qnappy is a Python-based control script for the QNAP line of low-end NAS
+products. Before using it, here's a few tidbits:
+
+- It is being developed on a TS-212; if your hardware is different, YMMV
+- 
+
+Requirements
+============
+
+- A compatible NAS
+
+- A normal Linux variant that provides TTY's and evdev support (not sure if
+  the stock firmware is any good for this)
+
+- The [evdev python module][evdev]
+
+- The [serial python module][serial], available on debian and ubuntu as
+  python-serial
+
+Usage
+=====
+
+To test qnappy, go to the directory where it is stored run it as root:
+
+[user@host qnappy]$ sudo ./qnappy 
+
+You should see output like this:
+
+  $ sudo ./qnappy 
+  <Device name='Live! Cam Optia' axes={} buttons={}>
+  <Device name='gpio-keys' axes={} buttons={}>
+  [1300923146.470256] Current temperature: 42
+  Temp: 42 [low] => fan silence
+  Setting status to fan_silence
+  [1300923146.910189] Status: FAN1_NORMAL
+  [1300923146.910557] Status: FAN2_NORMAL
+  [1300923151.490213] Current temperature: 43
+
+Most of which is a lot of debug crap.
+
+qnappy monitors evdev devices for different events.  If you plug something
+in, it should notice it.  The events will be available.  Since the QNAP is
+basically a black box with no inputs, this can be useful.
+
+Notes
+=====
+
+I don't really know what the optimal temperatures should be for these
+devices. I made some wild guesses as to how the fans should spin on which
+readings from the PIC.
+
+Also, the evdev code seems to be a bit buggy.  Don't expect this to run
+very long if you've got a mouse on the port and you're monkeying around with
+it.
+
+
+Acknowledgements
+================
+
+Getting Debian on your QNAP NAS is easy and fun.  A million thanks to
+[Martin Michlmayr][cyrius] for his wonderful site:
+
+  http://www.cyrius.com/debian/kirkwood/
+
+Instrumental!
+
+Also, the author of the [original qcontrol program][qcontrol], Frans Pop
+
+
+[serial]:http://pyserial.sourceforge.net/
+[evdev]:http://svn.navi.cx/misc/
+[cyrius]:http://www.cyrius.com/debian/kirkwood/
+

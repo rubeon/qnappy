@@ -34,9 +34,6 @@ For more information, please refer to <http://unlicense.org/>
 #
 # Use at your own risk.
 #
-# (c) 2011 Eric Williams <eric@subcritical.org>
-#
-#
 ##############################
 
 import evdev

@@ -25,24 +25,23 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 For more information, please refer to <http://unlicense.org/>
 """
-
-
-#############################
-#
-# Envisioned as a grand unified manager for the qnap series of 
-# low-end NAS devices.
-#
-# Use at your own risk.
-#
-##############################
-
 import evdev
 import qcontrol
 import select
 import glob
+import logging
 
 from time import sleep
 
+# setup my logger
+logger = logging.getLogger("qnappy")
+logger.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+ch.setLevel(logging.INFO)
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+ch.setFormatter(formatter)
+
+logger.addHandler(ch)
 
 def main():
   """
@@ -50,13 +49,15 @@ def main():
   watches for button events.
   """
   nas = qcontrol.Ts212()
-  ev =None
+  
+  # grab existing devices.  It won't react to devices that are
+  # inserted after starting.
+
+  EVDEV_DEVICES=glob.glob("/dev/input/event*")
+  ev  = evdev.DeviceGroup(EVDEV_DEVICES)
     
   while 1:
     # watch for incoming event device nodes...
-    del ev
-    EVDEV_DEVICES=glob.glob("/dev/input/event*")
-    ev  = evdev.DeviceGroup(EVDEV_DEVICES)
     readers = [nas.fd] + ev.fds
     writers = [nas.fd]
     writers = []
@@ -66,13 +67,13 @@ def main():
     
     for reader in r:
       if reader==nas.fd:
-        # print "OMG NASFD"
+        # logger.info "OMG NASFD"
         nas.process_data(reader.read(1))
     
       elif reader in ev.fds:
-        # print "OMG EV!"
+        # logger.info "OMG EV!"
         e = ev.next_event()
-        print dir(e)
+        logger.info( dir(e))
 
       else:
         pass 

@@ -32,6 +32,9 @@ import select
 import io
 import time
 import serial
+import logging
+
+module_logger = logging.getLogger("qnappy.qcontrol")
 
 class Nas:
   """
@@ -47,7 +50,16 @@ class Nas:
   from that distribution
   
   """
+  model_name = "Generic QNAP NAS"
   command = {}
+  temps = {}
+  temps['very_low'] 	= range(0,25)
+  temps['low'] 		= range(25,43)
+  temps['med'] 		= range(43,48)
+  temps['high'] 	= range(48,55)
+  temps['very_high'] 	= range(55,65)
+  temps['critical']	= range(65,100)
+  current_temp = 0
 
   status = {}    
   status[0x74] 	 	= "FAN1_NORMAL"
@@ -94,6 +106,7 @@ class Nas:
     this sets up the com interface
     """
     self.fd = serial.Serial(self.serial_port, 19200, timeout=1)
+    self.logger = logging.getLogger("qnappy.qcontrol.%s" % self.model_name)
     
   
   def read_serial_events(self):
@@ -123,23 +136,10 @@ class Nas:
     """
     pushes a byte out to the serial console.
     """
-    print "Setting status to", status
+    self.logger.info("Setting status to %s" % status)
     res = self.set_serial_events(chr(self.command[status]))
     return res
     
-
-
-class Ts409(Nas):    
-  # status led defs
-  model_name 		= "QNAP TS-409"
-  temps = {}
-  temps['very_low'] 	= range(0,25)
-  temps['low'] 		= range(25,43)
-  temps['med'] 		= range(43,48)
-  temps['high'] 	= range(48,55)
-  temps['very_high'] 	= range(55,65)
-  temps['critical']	= range(65,100)
-  
   def handle_temp(self, temp):
     """
     this should lower and raise the fan, i guess.
@@ -158,55 +158,63 @@ class Ts409(Nas):
     """
     
     temp = int(temp)
-    
-    if temp in self.temps['very_low']:
-      print "Temp: %s [very_low] => fan off" % temp
-      self.send_command("fan_stop")
+    if temp != self.current_temp:
+      # we've had a temperature change
+      if temp in self.temps['very_low']:
+        self.logger.info("Temp: %s [very_low] => fan off" % temp)
+        self.send_command("fan_stop")
 
-    if temp in self.temps['low']:
-      print "Temp: %s [low] => fan silence" % temp
-      self.send_command("fan_silence")
+      if temp in self.temps['low']:
+        self.logger.info("Temp: %s [low] => fan silence" % temp)
+        self.send_command("fan_silence")
 
-    elif temp in self.temps['med']:
-      print "Temp: %s [med] => fan low"  % temp
-      self.send_command("fan_low")
+      elif temp in self.temps['med']:
+        self.logger.info("Temp: %s [med] => fan low"  % temp)
+        self.send_command("fan_low")
 
-    elif temp in self.temps["high"]:
-      print "Temp: %s [high] => fan medium!"  % temp
-      self.send_command("fan_medium")
+      elif temp in self.temps["high"]:
+        self.logger.info("Temp: %s [high] => fan medium!"  % temp)
+        self.send_command("fan_medium")
 
-    elif temp in self.temps["very_high"]:
-      print "Temp: %s [very_high] => fan high!"  % temp
-      self.send_command("fan_high")
+      elif temp in self.temps["very_high"]:
+        self.logger.info("Temp: %s [very_high] => fan high!"  % temp)
+        self.send_command("fan_high")
 
-    elif temp in self.temps["critical"]:
-      print "Temp: %s [critical] => fan full! hot stuff! danger!"  % temp
-      self.send_command("fan_full")
+      elif temp in self.temps["critical"]:
+        self.logger.info("Temp: %s [critical] => fan full! hot stuff! danger!"  % temp)
+        self.send_command("fan_full")
 
-    else:
-      print "Temp: %s [unknown] => danger?"  % temp
-      self.send_command("fan_full")
+      else:
+        self.logger.info("Temp: %s [unknown] => danger?"  % temp )
+        self.send_command("fan_full")
+
+    self.current_temp = temp
+
       
   def process_data(self, res):
     """
-    figures out what the data from the serial port could mean.
+    figures out what the data from the serial port could mean. Takes 1 byte
+    of input from the serial port.
     """
-    
-    temp_upper = 0xc6
-    temp_lower = 0x80
-    
     temp_range = range(0x80,0xc7)  
     
     res = ord(res)
-    dbg_time = time.time()
+    # dbg_time = time.time()
     
     if res in temp_range:
       # it's a temperature reading...
       current_temp = int(res) - 128
-      print "[%2f] Current temperature: %s" % (dbg_time, current_temp)
+      self.logger.debug("Current temperature: %s" % (current_temp) )
       self.handle_temp(current_temp)
     else:
-      print "[%2f] Status: %s" % (dbg_time, self.status.get(res, "Unknown"))
+      self.logger.debug("Status: %s" % self.status.get(res, "Unknown"))
+
+
+
+class Ts409(Nas):    
+  # status led defs
+  model_name 		= "QNAP TS-409"
+    
       
 class Ts212(Ts409):
   """
@@ -224,7 +232,7 @@ def main():
     nas.send_command("fan_silence")
     nas.read_serial_events()      
   except KeyboardInterrupt, e:
-    print "Brokes!"
+    self.logger.info("Brokes!")
     nas.send_command("status_greenon")
     nas.send_command("usb_off")
     nas.send_command("fan_silence")

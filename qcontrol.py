@@ -100,13 +100,17 @@ class Nas:
   command["usb_off"] 		= 0x62
 
   serial_port = "/dev/ttyS1"
-
+  
   def __init__(self):
     """
     this sets up the com interface
     """
     self.fd = serial.Serial(self.serial_port, 19200, timeout=1)
     self.logger = logging.getLogger("qnappy.qcontrol.%s" % self.model_name)
+    self.last_fanspeed_change = 0 	# not using time.time(), so we can make sure to get a proper
+                                        # initial fanspeed for our current temperature....
+    self.fanspeed = ""
+
     
   
   def read_serial_events(self):
@@ -155,38 +159,52 @@ class Nas:
     
     Ideally, the operating range would be covered evenly.  Now,
     how to find out what the temperature ranges should be... :-/
+    
+    There's a 120 second lead time on fan speed changes, to avoid 
+    flapping. Listening to fan-speed changes every 5 seconds is
+    annoying.
+    
     """
     
     temp = int(temp)
-    if temp != self.current_temp:
+    self.logger.debug("Time since last speed change: %.2f [%dC][%s]" % (time.time() - self.last_fanspeed_change, temp, self.fanspeed))
+    if temp != self.current_temp and (time.time() - self.last_fanspeed_change > 120):
       # we've had a temperature change
       if temp in self.temps['very_low']:
         self.logger.info("Temp: %s [very_low] => fan off" % temp)
+        self.fanspeed = "fan_stop"
         self.send_command("fan_stop")
 
       if temp in self.temps['low']:
         self.logger.info("Temp: %s [low] => fan silence" % temp)
+        self.fanspeed = "fan_silence"
         self.send_command("fan_silence")
 
       elif temp in self.temps['med']:
         self.logger.info("Temp: %s [med] => fan low"  % temp)
+        self.fanspeed = "fan_low"
         self.send_command("fan_low")
 
       elif temp in self.temps["high"]:
         self.logger.info("Temp: %s [high] => fan medium!"  % temp)
+        self.fanspeed = "fan_medium"
         self.send_command("fan_medium")
 
       elif temp in self.temps["very_high"]:
         self.logger.info("Temp: %s [very_high] => fan high!"  % temp)
+        self.fanspeed = "fan_high"
         self.send_command("fan_high")
 
       elif temp in self.temps["critical"]:
         self.logger.info("Temp: %s [critical] => fan full! hot stuff! danger!"  % temp)
+        self.fanspeed = "fan_full"
         self.send_command("fan_full")
 
       else:
         self.logger.info("Temp: %s [unknown] => danger?"  % temp )
+        self.fanspeed = "fan_full"
         self.send_command("fan_full")
+      self.last_fanspeed_change = time.time()
 
     self.current_temp = temp
 

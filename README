@@ -31,20 +31,13 @@ To test qnappy, go to the directory where it is stored run it as root:
 You should see output like this:
 
   $ sudo ./qnappy 
-  <Device name='Live! Cam Optia' axes={} buttons={}>
-  <Device name='gpio-keys' axes={} buttons={}>
-  [1300923146.470256] Current temperature: 42
-  Temp: 42 [low] => fan silence
-  Setting status to fan_silence
-  [1300923146.910189] Status: FAN1_NORMAL
-  [1300923146.910557] Status: FAN2_NORMAL
-  [1300923151.490213] Current temperature: 43
+
+2011-05-24 14:53:49,871 - qnappy.qcontrol.QNAP TS-219 - INFO - Temp: 42 [low] => fan silence
+2011-05-24 14:53:49,873 - qnappy.qcontrol.QNAP TS-219 - INFO - Setting status to fan_silence
+2011-05-24 15:03:17,301 - qnappy.qcontrol.QNAP TS-219 - INFO - Temp: 45 [med] => fan low
+2011-05-24 15:03:17,302 - qnappy.qcontrol.QNAP TS-219 - INFO - Setting status to fan_low
 
 Most of which is a lot of debug crap.
-
-qnappy monitors evdev devices for different events.  If you plug something
-in, it should notice it.  The events will be available.  Since the QNAP is
-basically a black box with no inputs, this can be useful.
 
 Notes
 =====

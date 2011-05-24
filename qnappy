@@ -48,7 +48,7 @@ def main():
   this monitors the NAS's vitals, and also
   watches for button events.
   """
-  nas = qcontrol.Ts212()
+  nas = qcontrol.Ts219()
   
   # grab existing devices.  It won't react to devices that are
   # inserted after starting.

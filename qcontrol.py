@@ -54,8 +54,8 @@ class Nas:
   command = {}
   temps = {}
   temps['very_low'] 	= range(0,25)
-  temps['low'] 		= range(25,43)
-  temps['med'] 		= range(43,48)
+  temps['low'] 		= range(25,45)
+  temps['med'] 		= range(45,48)
   temps['high'] 	= range(48,55)
   temps['very_high'] 	= range(55,65)
   temps['critical']	= range(65,100)
@@ -168,7 +168,7 @@ class Nas:
     
     temp = int(temp)
     self.logger.debug("Time since last speed change: %.2f [%dC][%s]" % (time.time() - self.last_fanspeed_change, temp, self.fanspeed))
-    if temp != self.current_temp and (time.time() - self.last_fanspeed_change > 120):
+    if temp != self.current_temp and (time.time() - self.last_fanspeed_change > 300):
       # we've had a temperature change
       if temp in self.temps['very_low']:
         self.logger.info("Temp: %s [very_low] => fan off" % temp)
@@ -234,14 +234,14 @@ class Ts409(Nas):
   model_name 		= "QNAP TS-409"
     
       
-class Ts212(Ts409):
+class Ts219(Ts409):
   """
   this is pretty much the same hardware as a TS-409, AFAICT
   """
-  model_name = "QNAP TS-212"
+  model_name = "QNAP TS-219"
 
 def main():
-  nas = Ts212()
+  nas = Ts219()
   try:
     # nas.send_command("status_off")
     # nas.send_command("usb_8hz")

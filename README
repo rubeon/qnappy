@@ -61,10 +61,11 @@ Getting Debian on your QNAP NAS is easy and fun.  A million thanks to
 
 Instrumental!
 
-Also, the author of the [original qcontrol program][qcontrol], Frans Pop
-
+Also, the author of the [original qcontrol program][qcontrol], Byron
+Bradley.
 
 [serial]:http://pyserial.sourceforge.net/
 [evdev]:http://svn.navi.cx/misc/
 [cyrius]:http://www.cyrius.com/debian/kirkwood/
+[qcontrol]:http://code.google.com/p/qcontrol/
 
